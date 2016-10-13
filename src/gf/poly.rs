@@ -131,12 +131,12 @@ impl ops::AddAssign for Polynom {
 
         for i in 0..self.len() {
             let index = i + result.len() - self.len(); 
-            result[index] = self[i];
+            uncheck_mut!(result[index]) = self[i];
         }
 
         for i in 0..rhs.len() {
             let index = i + result.len() - rhs.len();
-            result[index] ^= rhs[i];
+            uncheck_mut!(result[index]) ^= rhs[i];
         }
 
         self.array = result.array;
@@ -162,7 +162,7 @@ impl ops::MulAssign for Polynom {
 
         for j in 0..rhs.len() {
             for i in 0..self.len() {
-                result[i+j] ^= gf::mul(self[i], rhs[j]);
+                uncheck_mut!(result[i+j]) ^= gf::mul(self[i], rhs[j]);
             }
         }
 
@@ -188,7 +188,7 @@ impl Polynom {
             if coef != 0 {
                 for j in 1..rhs.len() {
                     if rhs[j] != 0 {
-                        result[i + j] ^= gf::mul(rhs[j], coef);
+                        uncheck_mut!(result[i + j]) ^= gf::mul(rhs[j], coef);
                     }
                 }
             }
@@ -221,8 +221,8 @@ impl Polynom {
     #[inline]
     pub fn eval(&self, x: u8) -> u8 {
         let mut y = self[0];
-        for i in 1..self.len() {
-            y = gf::mul(y, x) ^ self[i];
+        for px in self.iter().skip(1) {
+            y = gf::mul(y, x) ^ px;
         }
         y
     }
