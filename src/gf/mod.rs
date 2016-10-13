@@ -60,6 +60,7 @@ static LOG: [u8; LOG_SIZE] = [
 
 /// Primitive operations over Galua Fields
 
+#[allow(dead_code)]
 #[inline]
 pub fn add(x: u8, y: u8) -> u8 {
     x ^ y
@@ -85,7 +86,7 @@ pub fn mul(x: u8, y: u8) -> u8 {
 
 #[inline]
 pub fn div(x: u8, y: u8) -> u8 {
-    assert!(y != 0);
+    debug_assert!(y != 0);
     if x == 0 {
         0
     } else {

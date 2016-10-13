@@ -1,8 +1,22 @@
-//#![no_std]
-extern crate core;
+#![feature(question_mark)]
+#![no_std]
 
 const POLYNOMIAL_MAX_LENGTH: usize = 256;
 
-pub mod gf;
-pub mod encoder;
-pub mod buffer;
+macro_rules! polynom {
+    [$value:expr; $count:expr] => {
+        $crate::gf::poly::Polynom::copy_from_slice(&[$value; $count])
+    }; 
+
+    [$( $value:expr ),* ] => {
+        $crate::gf::poly::Polynom::copy_from_slice(&[$($value, )*])
+    };
+}
+
+mod gf;
+mod encoder;
+mod buffer;
+
+pub use encoder::Encoder;
+pub use decoder::ReedSolomonError;
+pub use buffer::Buffer;

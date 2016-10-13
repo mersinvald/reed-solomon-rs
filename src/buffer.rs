@@ -31,6 +31,10 @@ impl Buffer {
             self[i + ofst] = rhs[i]; 
         }
     }
+
+    pub fn into_poly(self) -> Polynom {
+        self.poly
+    } 
 }
 
 impl Deref for Buffer {

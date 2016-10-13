@@ -1,6 +1,7 @@
+use ::gf;
+use ::buffer::Buffer;
 use core::ops;
 use core::cmp::max;
-use ::gf;
 
 #[derive(Copy)]
 pub struct Polynom {
@@ -42,8 +43,19 @@ impl Polynom {
     pub fn len(&self) -> usize {
         self.length
     }
-}
 
+    #[inline]
+    pub fn reverse(mut self) -> Self {
+        (*self).reverse();
+        self
+    }
+
+    #[inline]
+    pub fn push(&mut self, x: u8) {
+        self.array[self.length] = x;
+        self.length += 1; 
+    }
+}
 
 impl Clone for Polynom {
     #[inline]
@@ -57,6 +69,20 @@ impl ops::Deref for Polynom {
     #[inline]
     fn deref(&self) -> &Self::Target {
         &self.array[0..self.len()]
+    }
+}
+
+impl<'a> Into<Polynom> for &'a [u8] {
+    #[inline]
+    fn into(self) -> Polynom {
+        Polynom::copy_from_slice(&self)
+    }
+}
+
+impl<'a> Into<Polynom> for Buffer {
+    #[inline]
+    fn into(self) -> Polynom {
+        self.into_poly()
     }
 }
 
@@ -152,11 +178,12 @@ impl Polynom {
         let mut result = Polynom::copy_from_slice(self);
 
         // If divisor's degree (len-1) is bigger, all dividend is a remainder
-        if self.len() < rhs.len() - 1 {
+        let divisor_degree = rhs.len() - 1; 
+        if self.len() < divisor_degree {
             return (Polynom::new(), result)
         } 
-        
-        for i in 0..(self.len() - (rhs.len() - 1)) {
+
+        for i in 0..(self.len() - divisor_degree) {
             let coef = result[i];
             if coef != 0 {
                 for j in 1..rhs.len() {
@@ -203,23 +230,29 @@ impl Polynom {
 
 #[cfg(test)]
 mod tests {
-    use super::Polynom;
+    #[test]
+    fn reverse() {
+        let poly = polynom![5, 4, 3, 2, 1, 0];
+        for (i, x) in poly.reverse().iter().enumerate() {
+            assert_eq!(i, *x as usize);
+        }
+    }
 
     #[test]
     fn scale() {
-        let poly = Polynom::copy_from_slice(&[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]);
+        let poly = polynom![0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
         let answer = [0, 3, 6, 5, 12, 15, 10, 9, 24, 27];
         assert_eq!(answer, *(poly * 3));
     }
 
     #[test]
     fn add() {
-        let px = Polynom::copy_from_slice(&[0, 5, 10, 15, 20]);
-        let py = Polynom::copy_from_slice(&[3, 9, 17, 24, 75]);
+        let px = polynom![0, 5, 10, 15, 20];
+        let py = polynom![3, 9, 17, 24, 75];
         assert_eq!([3, 12, 27, 23, 95], *(px + py));
 
-        let px = Polynom::copy_from_slice(&[0, 5, 10]);
-        let py = Polynom::copy_from_slice(&[3, 9, 17, 24, 75]);
+        let px = polynom![0, 5, 10];
+        let py = polynom![3, 9, 17, 24, 75];
 
         assert_eq!([3, 9, 17, 29, 65], *(px + py));
         assert_eq!([3, 9, 17, 29, 65], *(py + px));
@@ -227,12 +260,12 @@ mod tests {
 
     #[test]
     fn mul() {
-        let px = Polynom::copy_from_slice(&[0, 5, 10, 15, 20]);
-        let py = Polynom::copy_from_slice(&[3, 9, 17, 24, 75]);
+        let px = polynom![0, 5, 10, 15, 20];
+        let py = polynom![3, 9, 17, 24, 75];
         assert_eq!([0, 15, 51, 30, 153, 193, 53, 115, 245], *(px * py));
 
-        let px = Polynom::copy_from_slice(&[0, 5, 10]);
-        let py = Polynom::copy_from_slice(&[3, 9, 17, 24, 75]);
+        let px = polynom![0, 5, 10];
+        let py = polynom![3, 9, 17, 24, 75];
 
         assert_eq!([0, 15, 51, 15, 210, 138, 244], *(px * py));
         assert_eq!([0, 15, 51, 15, 210, 138, 244], *(py * px));
@@ -240,8 +273,8 @@ mod tests {
 
     #[test]
     fn div() {
-        let px = Polynom::copy_from_slice(&[0, 5, 10, 15, 20]);
-        let py = Polynom::copy_from_slice(&[3, 9, 17, 24, 75]);
+        let px = polynom![0, 5, 10, 15, 20];
+        let py = polynom![3, 9, 17, 24, 75];
        
         let (q, r) = px.div(&py);
         assert_eq!([0], *q);
@@ -251,8 +284,8 @@ mod tests {
         assert_eq!([3], *q);
         assert_eq!([6, 15, 9, 119], *r);
         
-        let px = Polynom::copy_from_slice(&[0, 5, 10]);
-        let py = Polynom::copy_from_slice(&[3, 9, 17, 24, 75]);
+        let px = polynom![0, 5, 10];
+        let py = polynom![3, 9, 17, 24, 75];
 
         let empty: [u8; 0] = [];   
         let (q, r) = px.div(&py);
@@ -267,12 +300,19 @@ mod tests {
 
     #[test]
     fn eval() {
-        let p = Polynom::copy_from_slice(&[0, 5, 10, 15, 20]);
+        let p = polynom![0, 5, 10, 15, 20];
         let tests = [4, 7, 21, 87, 35, 255];
         let answers = [213, 97, 132, 183, 244, 92]; 
 
         for i in 0..tests.len() {
             assert_eq!(answers[i], p.eval(tests[i]));
         }
+    }
+}
+
+use core::fmt;
+impl fmt::Debug for Polynom {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        write!(fmt, "{:?}", &self[..])
     }
 }
