@@ -3,14 +3,14 @@ use core::ops::{Deref, DerefMut};
 
 pub struct Buffer {
     poly: Polynom,
-    data_len: usize
+    data_len: usize,
 }
 
 impl Buffer {
     pub fn new(poly: Polynom, data_len: usize) -> Self {
         Buffer {
             poly: poly,
-            data_len: data_len
+            data_len: data_len,
         }
     }
 
@@ -22,19 +22,21 @@ impl Buffer {
         &self[self.data_len..]
     }
 
-    pub fn append<T>(&mut self, rhs: T) where T: Into<Buffer> {
+    pub fn append<T>(&mut self, rhs: T)
+        where T: Into<Buffer>
+    {
         let rhs: Buffer = rhs.into();
         let ofst = self.len();
-        
+
         self.length += rhs.len();
         for i in 0..rhs.len() {
-            self[i + ofst] = rhs[i]; 
+            self[i + ofst] = rhs[i];
         }
     }
 
     pub fn into_poly(self) -> Polynom {
         self.poly
-    } 
+    }
 }
 
 impl Deref for Buffer {
@@ -54,7 +56,7 @@ impl From<Polynom> for Buffer {
     fn from(p: Polynom) -> Buffer {
         Buffer {
             poly: p,
-            data_len: 0
+            data_len: 0,
         }
     }
 }

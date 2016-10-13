@@ -5,7 +5,7 @@ use core::cmp::max;
 
 #[derive(Copy)]
 pub struct Polynom {
-    pub array:  [u8; ::POLYNOMIAL_MAX_LENGTH],
+    pub array: [u8; ::POLYNOMIAL_MAX_LENGTH],
     pub length: usize,
 }
 
@@ -29,12 +29,11 @@ impl Polynom {
     pub fn copy_from_slice(slice: &[u8]) -> Polynom {
         debug_assert!(slice.len() <= ::POLYNOMIAL_MAX_LENGTH);
         let mut new_array = [0; ::POLYNOMIAL_MAX_LENGTH];
-        
-        new_array[0..slice.len()]
-                .copy_from_slice(slice);
-        
+
+        new_array[0..slice.len()].copy_from_slice(slice);
+
         Polynom {
-            array:  new_array,
+            array: new_array,
             length: slice.len(),
         }
     }
@@ -53,7 +52,7 @@ impl Polynom {
     #[inline]
     pub fn push(&mut self, x: u8) {
         self.array[self.length] = x;
-        self.length += 1; 
+        self.length += 1;
     }
 }
 
@@ -120,17 +119,15 @@ impl ops::Add for Polynom {
     fn add(mut self, rhs: Polynom) -> Self::Output {
         self += rhs;
         self
-    } 
+    }
 }
 
 impl ops::AddAssign for Polynom {
     fn add_assign(&mut self, rhs: Polynom) {
-        let mut result = Polynom::with_length(
-            max(self.len(), rhs.len())
-        );
+        let mut result = Polynom::with_length(max(self.len(), rhs.len()));
 
         for i in 0..self.len() {
-            let index = i + result.len() - self.len(); 
+            let index = i + result.len() - self.len();
             uncheck_mut!(result[index]) = self[i];
         }
 
@@ -156,19 +153,17 @@ impl ops::Mul for Polynom {
 
 impl ops::MulAssign for Polynom {
     fn mul_assign(&mut self, rhs: Polynom) {
-        let mut result = Polynom::with_length(
-            self.len() + rhs.len() - 1
-        );
+        let mut result = Polynom::with_length(self.len() + rhs.len() - 1);
 
         for j in 0..rhs.len() {
             for i in 0..self.len() {
-                uncheck_mut!(result[i+j]) ^= gf::mul(self[i], rhs[j]);
+                uncheck_mut!(result[i + j]) ^= gf::mul(self[i], rhs[j]);
             }
         }
 
         self.array = result.array;
         self.shrink(result.len());
-    }  
+    }
 }
 
 /// Polynomial division
@@ -178,10 +173,10 @@ impl Polynom {
         let mut result = Polynom::copy_from_slice(self);
 
         // If divisor's degree (len-1) is bigger, all dividend is a remainder
-        let divisor_degree = rhs.len() - 1; 
+        let divisor_degree = rhs.len() - 1;
         if self.len() < divisor_degree {
-            return (Polynom::new(), result)
-        } 
+            return (Polynom::new(), result);
+        }
 
         for i in 0..(self.len() - divisor_degree) {
             let coef = result[i];
@@ -195,7 +190,7 @@ impl Polynom {
         }
 
         let separator = self.len() - (rhs.len() - 1);
-        
+
         // Quotient is after separator
         let remainder = Polynom::copy_from_slice(&result[separator..]);
 
@@ -275,7 +270,7 @@ mod tests {
     fn div() {
         let px = polynom![0, 5, 10, 15, 20];
         let py = polynom![3, 9, 17, 24, 75];
-       
+
         let (q, r) = px.div(&py);
         assert_eq!([0], *q);
         assert_eq!([5, 10, 15, 20], *r);
@@ -283,13 +278,13 @@ mod tests {
         let (q, r) = py.div(&px);
         assert_eq!([3], *q);
         assert_eq!([6, 15, 9, 119], *r);
-        
+
         let px = polynom![0, 5, 10];
         let py = polynom![3, 9, 17, 24, 75];
 
-        let empty: [u8; 0] = [];   
+        let empty: [u8; 0] = [];
         let (q, r) = px.div(&py);
-        
+
         assert_eq!(empty, *q);
         assert_eq!([0, 5, 10], *r);
 
@@ -302,7 +297,7 @@ mod tests {
     fn eval() {
         let p = polynom![0, 5, 10, 15, 20];
         let tests = [4, 7, 21, 87, 35, 255];
-        let answers = [213, 97, 132, 183, 244, 92]; 
+        let answers = [213, 97, 132, 183, 244, 92];
 
         for i in 0..tests.len() {
             assert_eq!(answers[i], p.eval(tests[i]));
