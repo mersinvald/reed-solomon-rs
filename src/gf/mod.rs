@@ -76,11 +76,12 @@ pub fn mul(x: u8, y: u8) -> u8 {
     if x == 0 || y == 0 {
         0
     } else {
-        let log_x = LOG[x as usize] as usize;
-        let log_y = LOG[y as usize] as usize;
-        let exp_index = log_x + log_y;
+        let log_x = uncheck!(LOG[x as usize]);
+        let log_y = uncheck!(LOG[y as usize]);
+        let exp_index = log_x as usize + 
+                        log_y as usize;
 
-        EXP[exp_index]
+        uncheck!(EXP[exp_index])
     }
 }
 
@@ -90,31 +91,31 @@ pub fn div(x: u8, y: u8) -> u8 {
     if x == 0 {
         0
     } else {
-        let log_x = LOG[x as usize] as usize;
-        let log_y = LOG[y as usize] as usize;
+        let log_x = uncheck!(LOG[x as usize]) as usize;
+        let log_y = uncheck!(LOG[y as usize]) as usize;
         let exp_index = (log_x + 255 - log_y) % 255;
 
-        EXP[exp_index]
+        uncheck!(EXP[exp_index])
     }
 }
 
 #[inline]
 pub fn pow(x: u8, power: i32) -> u8 {
-    let mut i = LOG[x as usize] as i32
-              * power
-              % 255;
+    let mut i = uncheck!(LOG[x as usize]) as i32
+            * power
+            % 255;
 
     if i < 0 {
         i += 255; 
     }
 
-    EXP[i as usize]
+    uncheck!(EXP[i as usize])
 }
 
 #[inline]
 pub fn inverse(x: u8) -> u8 {
-    let exp_index = 255 - LOG[x as usize];
-    EXP[exp_index as usize]
+    let exp_index = 255 - uncheck!(LOG[x as usize]);
+    uncheck!(EXP[exp_index as usize])
 }
 
 #[cfg(test)]

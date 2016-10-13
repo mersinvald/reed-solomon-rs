@@ -3,16 +3,8 @@
 
 const POLYNOMIAL_MAX_LENGTH: usize = 256;
 
-macro_rules! polynom {
-    [$value:expr; $count:expr] => {
-        $crate::gf::poly::Polynom::copy_from_slice(&[$value; $count])
-    }; 
-
-    [$( $value:expr ),* ] => {
-        $crate::gf::poly::Polynom::copy_from_slice(&[$($value, )*])
-    };
-}
-
+#[macro_use]
+mod macros;
 mod gf;
 mod encoder;
 mod decoder;
