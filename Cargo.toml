@@ -4,7 +4,6 @@ description = "Reed-Solomon BCH encoder and decoder with support of no_std envir
 repository = "https://github.com/mersinvald/reed-solomon-rs"
 readme = "README.md"
 license = "MIT"
-license-file = "LICENSE"
 keywords = ["cryptography", "ecc", "bch", "error correction", "no_std"]
 authors = ["Mike Lubinets <lubinetsm@yandex.ru>"]
 version = "0.1.0"
