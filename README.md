@@ -1,5 +1,5 @@
 # Reed-Solomon BCH
-
+[![Build Status](https://travis-ci.org/mersinvald/reed-solomon-rs.svg?branch=master)](https://travis-ci.org/mersinvald/reed-solomon-rs)
 
 Reed-Solomon BCH encoder and decoder implemented in Rust.
 This is a port of python implementation from [Wikiversity](https://en.wikiversity.org/wiki/Reed–Solomon_codes_for_coders)
