@@ -1,5 +1,7 @@
 # Reed-Solomon BCH
 [![Build Status](https://travis-ci.org/mersinvald/reed-solomon-rs.svg?branch=master)](https://travis-ci.org/mersinvald/reed-solomon-rs)
+[![Crates.io](https://img.shields.io/crates/v/reed-solomon.svg)](https://crates.io/crates/reed-solomon)
+
 
 Reed-Solomon BCH encoder and decoder implemented in Rust.
 This is a port of python implementation from [Wikiversity](https://en.wikiversity.org/wiki/Reed–Solomon_codes_for_coders)
@@ -44,7 +46,7 @@ fn main() {
 
     // Try to recover data
     let known_erasures = [0];
-    let recovered = dec.decode(corrupted, Some(&known_erasures)).unwrap();
+    let recovered = dec.decode(&corrupted, Some(&known_erasures)).unwrap();
 
     let orig_str = std::str::from_utf8(data).unwrap();
     let recv_str = std::str::from_utf8(recovered.data()).unwrap();
