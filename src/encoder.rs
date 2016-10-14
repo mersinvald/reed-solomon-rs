@@ -3,15 +3,40 @@ use ::gf::poly::Polynom;
 use ::buffer::Buffer;
 use ::gf;
 
+/// Reed-Solomon BCH encoder
+#[derive(Debug)]
 pub struct Encoder {
     generator: Polynom,
 }
 
-impl Encoder {    
+impl Encoder {   
+    /// Constructs a new `Encoder` and calculates generator polynomial of given `ecc_len`
+    ///
+    /// # Example
+    /// ```rust
+    /// use reed_solomon::Encoder;
+    ///
+    /// let encoder = Encoder::new(8);
+    /// ``` 
     pub fn new(ecc_len: usize) -> Self {
         Encoder { generator: generator_poly(ecc_len) }
     }
 
+    /// Encodes passed `&[u8]` slice and returns `Buffer` with result and `ecc` offset
+    ///
+    /// # Example
+    /// ```rust
+    /// use reed_solomon::Encoder;
+    ///
+    /// let data = "Hello World".as_bytes();
+    /// let encoder = Encoder::new(8);
+    ///
+    /// let encoded = encoder.encode(&data);
+    ///
+    /// println!("whole: {:?}", &encoded[..]);
+    /// println!("data:  {:?}", encoded.data());
+    /// println!("ecc:   {:?}", encoded.ecc());
+    /// ```
     pub fn encode(&self, data: &[u8]) -> Buffer {
         let mut data = Polynom::from(data);
         let data_len = data.len();
