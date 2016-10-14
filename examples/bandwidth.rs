@@ -1,5 +1,5 @@
 extern crate reed_solomon;
-extern crate test;
+extern crate rustc_serialize;
 
 use reed_solomon::Encoder;
 use reed_solomon::Decoder;
@@ -31,22 +31,19 @@ use std::thread;
 use std::time::Duration;
 use std::sync::mpsc;
 
-const DATA_LEN: usize = 223;
-const ECC_LEN: usize = 32;
-
 // Returns MB/s
-fn encoder_bandwidth() -> f32 { 
+fn encoder_bandwidth(data_len: usize, ecc_len: usize) -> f32 { 
      // Measure encoding bandwidth
     let (tx, thr_rx) = mpsc::channel();
     let (thr_tx, rx) = mpsc::channel();
     
     thread::spawn(move || {
         let mut generator = Generator::new();
-        let encoder = Encoder::new(ECC_LEN);
+        let encoder = Encoder::new(ecc_len);
 
-        let mut buffer = [0; DATA_LEN];
+        let mut buffer = vec![0; data_len];
         while thr_rx.try_recv().is_err() {
-            for i in 0..DATA_LEN {
+            for i in 0..data_len {
                 buffer[i] = generator.next().unwrap(); 
             }
 
@@ -64,18 +61,18 @@ fn encoder_bandwidth() -> f32 {
     kbytes / 1024.0
 }
 
-fn decoder_bandwidth(errors: usize) -> f32 {
+fn decoder_bandwidth(data_len: usize, ecc_len: usize, errors: usize) -> f32 {
      // Measure decoder bandwidth
     let (tx, thr_rx) = mpsc::channel();
     let (thr_tx, rx) = mpsc::channel();
     
     thread::spawn(move || {
         let mut generator = Generator::new();
-        let encoder = Encoder::new(ECC_LEN);
-        let decoder = Decoder::new(ECC_LEN);
+        let encoder = Encoder::new(ecc_len);
+        let decoder = Decoder::new(ecc_len);
 
-        let mut buffer = [0; DATA_LEN];
-        for i in 0..DATA_LEN {
+        let mut buffer = vec![0; data_len];
+        for i in 0..data_len {
             buffer[i] = generator.next().unwrap(); 
         }
 
@@ -87,7 +84,7 @@ fn decoder_bandwidth(errors: usize) -> f32 {
         let mut bytes = 0;
         while thr_rx.try_recv().is_err() {
             decoder.decode(&encoded, None).unwrap();            
-            bytes += DATA_LEN;
+            bytes += data_len;
         }
 
         thr_tx.send(bytes).unwrap();
@@ -101,10 +98,43 @@ fn decoder_bandwidth(errors: usize) -> f32 {
     kbytes / 1024.0
 } 
 
+#[derive(RustcEncodable)]
+struct BenchResult {
+    data_len: usize,
+    ecc_len: usize,
+    encoder: EncoderResult,
+    decoder: Vec<DecoderResult>
+} 
+
+#[derive(RustcEncodable)]
+struct EncoderResult {
+    bandwidth: f32
+}
+
+#[derive(RustcEncodable)]
+struct DecoderResult {
+    errors: usize,
+    bandwidth: f32
+}
+
 fn main() {
-    println!("Reed-Solomon(data: {}, ecc: {})", DATA_LEN, ECC_LEN);
-    println!("Encoder bandwidth: {0:.2} MB/s", encoder_bandwidth());
-    for i in 0..((ECC_LEN / 2) + 1) {
-        println!("Decoder bandwidth, {0} errors: {1:.2} MB/s", i, decoder_bandwidth(i));
-    }
+    let results: Vec<BenchResult> = [(251, 4), (239, 16), (223, 32)].iter().map(|case| {
+        let data_len = case.0;
+        let ecc_len = case.1;
+
+        BenchResult {
+            data_len: data_len,
+            ecc_len: ecc_len,
+            encoder: EncoderResult {
+                bandwidth: encoder_bandwidth(data_len, ecc_len),
+            },
+            decoder: (0..(ecc_len / 2) + 1).map(|e| DecoderResult {
+                errors: e,
+                bandwidth: decoder_bandwidth(data_len, ecc_len, e)
+            }).collect()
+        }
+    }).collect();
+
+    let json = rustc_serialize::json::encode(&results).unwrap();
+    println!("{}", json);
 }
