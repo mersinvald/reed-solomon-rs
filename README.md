@@ -2,6 +2,7 @@
 [![Build Status](https://travis-ci.org/mersinvald/reed-solomon-rs.svg?branch=master)](https://travis-ci.org/mersinvald/reed-solomon-rs)
 [![Crates.io](https://img.shields.io/crates/v/reed-solomon.svg)](https://crates.io/crates/reed-solomon)
 
+[Documentation](https://docs.rs/reed-solomon/)
 
 Reed-Solomon BCH encoder and decoder implemented in Rust.
 This is a port of python implementation from [Wikiversity](https://en.wikiversity.org/wiki/Reed–Solomon_codes_for_coders)
