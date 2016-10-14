@@ -7,9 +7,16 @@ pub struct Buffer {
 }
 
 impl Buffer {
-    pub fn new(poly: Polynom, data_len: usize) -> Self {
+    pub fn from_polynom(poly: Polynom, data_len: usize) -> Self {
         Buffer {
             poly: poly,
+            data_len: data_len,
+        }
+    }
+
+    pub fn from_slice(slice: &[u8], data_len: usize) -> Self {
+        Buffer {
+            poly: Polynom::from(slice),
             data_len: data_len,
         }
     }
@@ -22,12 +29,8 @@ impl Buffer {
         &self[self.data_len..]
     }
 
-    pub fn append<T>(&mut self, rhs: T)
-        where T: Into<Buffer>
-    {
-        let rhs: Buffer = rhs.into();
+    pub fn append(&mut self, rhs: &[u8]) {
         let ofst = self.len();
-
         self.length += rhs.len();
         for i in 0..rhs.len() {
             self[i + ofst] = rhs[i];
@@ -55,8 +58,8 @@ impl DerefMut for Buffer {
 impl From<Polynom> for Buffer {
     fn from(p: Polynom) -> Buffer {
         Buffer {
+            data_len: p.len(),
             poly: p,
-            data_len: 0,
         }
     }
 }

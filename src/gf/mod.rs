@@ -1,6 +1,6 @@
 //! Operations over Galua Fields, using pre-calculated tables for 0x11d primitive polynomial
-
 pub mod poly;
+pub mod poly_math;
 
 const EXP_SIZE: usize = 512;
 static EXP: [u8; EXP_SIZE] = [

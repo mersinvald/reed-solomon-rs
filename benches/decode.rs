@@ -20,6 +20,6 @@ fn decode(b: &mut test::Bencher) {
     let encoded = encoder.encode(&data[..]);
 
     b.iter(|| {
-        decoder.decode(encoded.clone(), None).unwrap();
+        decoder.decode(&encoded, None).unwrap();
     })
 }
