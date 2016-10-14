@@ -1,5 +1,3 @@
-#![feature(test)]
-extern crate test;
 extern crate reed_solomon;
 
 use reed_solomon::Encoder;
