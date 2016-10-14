@@ -1,4 +1,4 @@
-//! Operations over Galua Fields, using pre-calculated tables for 0x11d primitive polynomial
+//! Operations over Galois Fields, using pre-calculated tables for 0x11d primitive polynomial
 pub mod poly;
 pub mod poly_math;
 

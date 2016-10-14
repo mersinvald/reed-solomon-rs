@@ -3,21 +3,59 @@ use ::gf::poly::Polynom;
 use ::buffer::Buffer;
 use ::gf;
 
-#[derive(Debug)]
+/// Decoder error
+#[derive(Debug, Copy, Clone)]
 pub enum ReedSolomonError {
+    /// Message is unrecoverably corrupted
     TooManyErrors,
 }
 
+/// Reed-Solomon BCH decoder
 #[derive(Debug)]
 pub struct Decoder {
     ecc_len: usize,
 }
 
 impl Decoder {
+    /// Constructs a new `Decoder`
+    ///
+    /// # Example
+    /// ```rust
+    /// use reed_solomon::Decoder;
+    ///
+    /// let decoder = Decoder::new(8);
+    /// ```
     pub fn new(ecc_len: usize) -> Self {
         Decoder { ecc_len: ecc_len }
     }
 
+    /// Decodes block-encoded message and returns `Buffer` with corrected message and ecc offset
+    ///
+    /// # Example
+    /// ```rust
+    /// use reed_solomon::Encoder;
+    /// use reed_solomon::Decoder;
+    /// 
+    /// // Create encoder and decoder
+    /// let encoder = Encoder::new(4);
+    /// let decoder = Decoder::new(4);
+    ///
+    /// // Encode message
+    /// let mut encoded = encoder.encode(&[1, 2, 3, 4]);
+    /// 
+    /// // Corrupt message
+    /// encoded[2] = 1;
+    /// encoded[3] = 2;
+    ///
+    /// // Let's assume it's known that `encoded[3]` is an error
+    /// let known_erasures = [3];
+    ///
+    /// // Decode and correct message, 
+    /// let corrected = decoder.decode(&encoded, Some(&known_erasures)).unwrap();
+    /// 
+    /// // Check results
+    /// assert_eq!(&[1, 2, 3, 4], corrected.data())
+    /// ```
     pub fn decode<'a>(&'a self, msg: &'a [u8], erase_pos: Option<&[u8]>) -> Result<Buffer, ReedSolomonError> {
         let mut msg = Buffer::from_slice(msg, msg.len() - self.ecc_len);
 
