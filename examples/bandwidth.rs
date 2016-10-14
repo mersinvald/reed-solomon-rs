@@ -1,8 +1,4 @@
-#![feature(test)]
-#![feature(inclusive_range_syntax)]
-
 extern crate reed_solomon;
-extern crate test;
 
 use reed_solomon::Encoder;
 use reed_solomon::Decoder;
@@ -82,7 +78,7 @@ fn decoder_bandwidth(errors: usize) -> f32 {
             buffer[i] = generator.next().unwrap(); 
         }
 
-        let mut encoded = test::black_box(encoder.encode(&buffer));
+        let mut encoded = encoder.encode(&buffer);
         for i in 0..errors {
             encoded[i] = 0;
         } 
@@ -107,7 +103,7 @@ fn decoder_bandwidth(errors: usize) -> f32 {
 fn main() {
     println!("Reed-Solomon(data: {}, ecc: {})", DATA_LEN, ECC_LEN);
     println!("Encoder bandwidth: {0:.2} MB/s", encoder_bandwidth());
-    for i in 0...(ECC_LEN / 2) {
+    for i in 0..((ECC_LEN / 2) + 1) {
         println!("Decoder bandwidth, {0} errors: {1:.2} MB/s", i, decoder_bandwidth(i));
     }
 }
