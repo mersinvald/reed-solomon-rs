@@ -1,3 +1,4 @@
+use ::gf::poly_math::*;
 use ::gf::poly::Polynom;
 use ::buffer::Buffer;
 use ::gf;
@@ -17,20 +18,18 @@ impl Decoder {
         Decoder { ecc_len: ecc_len }
     }
 
-    pub fn decode<T>(&self, msg: T, erase_pos: Option<&[u8]>) -> Result<Buffer, ReedSolomonError>
-        where T: Into<Polynom>
-    {
+    pub fn decode<'a>(&'a self, msg: &'a [u8], erase_pos: Option<&[u8]>) -> Result<Buffer, ReedSolomonError> {
+        let mut msg = Buffer::from_slice(msg, msg.len() - self.ecc_len);
 
-        let mut msg = msg.into();
         assert!(msg.len() < 256);
 
         let erase_pos = if let Some(erase_pos) = erase_pos {
             for e_pos in erase_pos {
                 msg[*e_pos as usize] = 0;
             }
-            Polynom::copy_from_slice(&erase_pos)
+            erase_pos
         } else {
-            polynom![]
+            &[]
         };
 
         if erase_pos.len() > self.ecc_len {
@@ -41,7 +40,7 @@ impl Decoder {
 
         // No errors
         if synd.iter().max() == Some(&0) {
-            return Ok(Buffer::new(msg, msg.len() - self.ecc_len));
+            return Ok(msg);
         }
 
         let fsynd = self.forney_syndromes(&synd, &erase_pos, msg.len());
@@ -59,11 +58,11 @@ impl Decoder {
         if self.is_corrupted(&msg_out) {
             Err(ReedSolomonError::TooManyErrors)
         } else {
-            Ok(Buffer::new(msg_out, msg.len() - self.ecc_len))
+            Ok(Buffer::from_polynom(msg_out, msg.len() - self.ecc_len))
         }
     }
 
-    fn calc_syndromes(&self, msg: &Polynom) -> Polynom {
+    fn calc_syndromes(&self, msg: &[u8]) -> Polynom {
         // index 0 is a pad for mathematical precision
         let mut synd = Polynom::with_length(self.ecc_len + 1);
         for i in 0..self.ecc_len {
@@ -73,34 +72,34 @@ impl Decoder {
         synd
     }
 
-    fn is_corrupted(&self, msg: &Polynom) -> bool {
+    fn is_corrupted(&self, msg: &[u8]) -> bool {
         self.calc_syndromes(msg).iter().max() != Some(&0)
     }
 
     fn find_errata_locator(&self, e_pos: &[u8]) -> Polynom {
         let mut e_loc = polynom![1];
 
+        let add_lhs = [1];
+        let mut add_rhs = [0, 0];
         for i in e_pos.iter() {
-            let add_lhs = polynom![1];
-            let add_rhs = polynom![gf::pow(2, *i as i32), 0];
-
-            e_loc *= add_lhs + add_rhs;
+            add_rhs[0] = gf::pow(2, *i as i32);
+            e_loc = e_loc.mul(&add_lhs.add(&add_rhs));
         }
 
         e_loc
     }
 
-    fn find_error_evaluator(&self, synd: Polynom, err_loc: Polynom, syms: usize) -> Polynom {
+    fn find_error_evaluator(&self, synd: &[u8], err_loc: &[u8], syms: usize) -> Polynom {
         let mut divisor = Polynom::with_length(syms + 2);
         divisor[0] = 1;
 
-        let (_, remainder) = (synd * err_loc).div(&divisor);
+        let (_, remainder) = (synd.mul(err_loc)).div(&divisor);
         remainder
     }
 
     /// Forney algorithm, computes the values (error magnitude) to correct the input message.
     #[allow(non_snake_case)]
-    fn correct_errata(&self, msg: &Polynom, synd: &Polynom, err_pos: &[u8]) -> Polynom {
+    fn correct_errata(&self, msg: &[u8], synd: &[u8], err_pos: &[u8]) -> Polynom {
         // convert the positions to coefficients degrees
         let mut coef_pos = Polynom::with_length(err_pos.len());
         for (i, x) in err_pos.iter().enumerate() {
@@ -108,8 +107,9 @@ impl Decoder {
         }
 
         let err_loc = self.find_errata_locator(&coef_pos);
-        let err_eval = self.find_error_evaluator(synd.reverse(), err_loc, err_loc.len() - 1)
-            .reverse();
+        let synd = Polynom::copy_from_slice(synd);
+        let err_eval = self.find_error_evaluator(&synd.reverse(), &err_loc, err_loc.len() - 1)
+                    .reverse();
 
         let mut X = Polynom::new();
 
@@ -145,17 +145,17 @@ impl Decoder {
             uncheck_mut!(E[E_index]) = magnitude;
         }
 
-        *msg + E
+        msg.add(&E)
     }
 
     #[allow(non_snake_case)]
     fn find_error_locator(&self,
-                          synd: &Polynom,
-                          erase_loc: Option<&Polynom>,
+                          synd: &[u8],
+                          erase_loc: Option<&[u8]>,
                           erase_count: usize)
                           -> Result<Polynom, ReedSolomonError> {
         let (mut err_loc, mut old_loc) = if let Some(erase_loc) = erase_loc {
-            (*erase_loc, *erase_loc)
+            (Polynom::from(erase_loc), Polynom::from(erase_loc))
         } else {
             (polynom![1], polynom![1])
         };
@@ -183,12 +183,12 @@ impl Decoder {
 
             if delta != 0 {
                 if old_loc.len() > err_loc.len() {
-                    let new_loc = old_loc * delta;
-                    old_loc = err_loc * gf::inverse(delta);
+                    let new_loc = old_loc.scale(delta);
+                    old_loc = err_loc.scale(gf::inverse(delta));
                     err_loc = new_loc;
                 }
 
-                err_loc = err_loc + old_loc * delta;
+                err_loc = err_loc.add(&old_loc.scale(delta));
             }
         }
 
@@ -216,7 +216,7 @@ impl Decoder {
         }
     }
 
-    fn find_errors(&self, err_loc: &Polynom, msg_len: usize) -> Result<Polynom, ReedSolomonError> {
+    fn find_errors(&self, err_loc: &[u8], msg_len: usize) -> Result<Polynom, ReedSolomonError> {
         let errs = err_loc.len() - 1;
         let mut err_pos = polynom![];
 
@@ -234,7 +234,7 @@ impl Decoder {
         }
     }
 
-    fn forney_syndromes(&self, synd: &Polynom, pos: &Polynom, msg_len: usize) -> Polynom {
+    fn forney_syndromes(&self, synd: &[u8], pos: &[u8], msg_len: usize) -> Polynom {
         let mut erase_pos_rev = Polynom::with_length(pos.len());
         for (i, x) in pos.iter().enumerate() {
             erase_pos_rev[i] = msg_len as u8 - 1 - x;
@@ -292,18 +292,18 @@ mod tests {
 
     #[test]
     fn find_error_evaluator() {
-        let synd = polynom![232, 103, 78, 56, 109, 59, 242, 42, 64, 0];
-        let err_loc = polynom![134, 207, 111, 227, 24, 150, 1];
+        let synd = [232, 103, 78, 56, 109, 59, 242, 42, 64, 0];
+        let err_loc = [134, 207, 111, 227, 24, 150, 1];
 
         assert_eq!([148, 151, 175, 126, 68, 64, 0],
-                   *Decoder::new(6).find_error_evaluator(synd, err_loc, 6));
+                   *Decoder::new(6).find_error_evaluator(&synd, &err_loc, 6));
     }
 
     #[test]
     fn correct_errata() {
-        let msg = polynom![0, 0, 0, 2, 2, 2, 119, 111, 114, 108, 100, 145, 124, 96, 105, 94, 31,
+        let msg = [0, 0, 0, 2, 2, 2, 119, 111, 114, 108, 100, 145, 124, 96, 105, 94, 31,
                            179, 149, 163];
-        let synd = polynom![0, 64, 42, 242, 59, 109, 56, 78, 103, 232];
+        let synd = [0, 64, 42, 242, 59, 109, 56, 78, 103, 232];
         let err_pos = [0, 1, 2, 5, 4, 3];
         let result = [104, 101, 108, 108, 111, 32, 119, 111, 114, 108, 100, 145, 124, 96, 105, 94,
                       31, 179, 149, 163];
@@ -314,7 +314,7 @@ mod tests {
 
     #[test]
     fn find_error_locator() {
-        let synd = polynom![79, 25, 0, 160, 198, 122, 192, 169, 232];
+        let synd = [79, 25, 0, 160, 198, 122, 192, 169, 232];
         let nsym = 9;
         let erase_loc = None;
         let erase_count = 3;
@@ -329,7 +329,7 @@ mod tests {
 
     #[test]
     fn find_errors() {
-        let err_loc = polynom![1, 121, 144, 193];
+        let err_loc = [1, 121, 144, 193];
         let msg_len = 20;
         let result = [5, 4, 3];
 
@@ -338,7 +338,7 @@ mod tests {
         assert!(err_pos.is_ok());
         assert_eq!(result, *err_pos.unwrap());
 
-        let err_loc = polynom![1, 134, 181];
+        let err_loc = [1, 134, 181];
         let msg_len = 12;
 
         let err_pos = Decoder::new(6).find_errors(&err_loc, msg_len);
@@ -348,8 +348,8 @@ mod tests {
 
     #[test]
     fn forney_syndromes() {
-        let synd = polynom![0, 64, 42, 242, 59, 109, 56, 78, 103, 232];
-        let pos = polynom![0, 1, 2];
+        let synd = [0, 64, 42, 242, 59, 109, 56, 78, 103, 232];
+        let pos = [0, 1, 2];
         let nmess = 20;
 
         let result = [79, 25, 0, 160, 198, 122, 192, 169, 232];

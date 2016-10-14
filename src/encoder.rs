@@ -1,3 +1,4 @@
+use ::gf::poly_math::*;
 use ::gf::poly::Polynom;
 use ::buffer::Buffer;
 use ::gf;
@@ -6,15 +7,13 @@ pub struct Encoder {
     generator: Polynom,
 }
 
-impl Encoder {
+impl Encoder {    
     pub fn new(ecc_len: usize) -> Self {
         Encoder { generator: generator_poly(ecc_len) }
     }
 
-    pub fn encode<T>(&self, data: T) -> Buffer
-        where T: Into<Polynom>
-    {
-        let mut data = data.into();
+    pub fn encode(&self, data: &[u8]) -> Buffer {
+        let mut data = Polynom::from(data);
         let data_len = data.len();
 
         data.length += self.generator.len() - 1;
@@ -22,19 +21,19 @@ impl Encoder {
         let (_, rem) = data.div(&self.generator);
 
         data.length = data_len;
-        let mut output = Buffer::new(data, data_len);
-
-        output.append(rem);
-        output
+        
+        let mut data = Buffer::from(data);
+        data.append(&rem);
+        data
     }
 }
 
 fn generator_poly(ecclen: usize) -> Polynom {
     let mut gen = polynom![1];
-    let mut mm = polynom![1, 0];
+    let mut mm = [1, 0];
     for i in 0..ecclen {
         mm[1] = gf::pow(2, i as i32);
-        gen *= mm;
+        gen = gen.mul(&mm);
     }
     gen
 }
