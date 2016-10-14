@@ -79,10 +79,10 @@ impl Decoder {
     fn find_errata_locator(&self, e_pos: &[u8]) -> Polynom {
         let mut e_loc = polynom![1];
 
+        let add_lhs = [1];
+        let mut add_rhs = [0, 0];
         for i in e_pos.iter() {
-            let add_lhs = [1];
-            let add_rhs = [gf::pow(2, *i as i32), 0];
-
+            add_rhs[0] = gf::pow(2, *i as i32);
             e_loc = e_loc.mul(&add_lhs.add(&add_rhs));
         }
 
