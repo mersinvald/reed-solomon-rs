@@ -1,5 +1,4 @@
 extern crate reed_solomon;
-extern crate test;
 
 use reed_solomon::Encoder;
 use reed_solomon::Decoder;
