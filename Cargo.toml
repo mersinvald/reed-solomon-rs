@@ -13,4 +13,5 @@ version = "0.1.2"
 rustc-serialize = "0.3"
 
 [features]
+default = ["unsafe_indexing"]
 unsafe_indexing = []

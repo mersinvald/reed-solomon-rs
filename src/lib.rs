@@ -71,17 +71,17 @@
 //!   <tr>
 //!     <td class="tg-baqh">251</td>
 //!     <td class="tg-baqh">4</td>
-//!     <td class="tg-baqh">100 MB/s<br></td>
+//!     <td class="tg-baqh">105 MB/s<br></td>
 //!   </tr>
 //!   <tr>
 //!     <td class="tg-baqh">239</td>
 //!     <td class="tg-baqh">16</td>
-//!     <td class="tg-baqh">32.57 MB/s<br></td>
+//!     <td class="tg-baqh">33.98 MB/s<br></td>
 //!   </tr>
 //!   <tr>
 //!     <td class="tg-baqh">223</td>
 //!     <td class="tg-baqh">32</td>
-//!     <td class="tg-baqh">17.09 MB/s<br></td>
+//!     <td class="tg-baqh">16.32 MB/s<br></td>
 //!   </tr>
 //! </table>
 //! 
@@ -104,55 +104,55 @@
 //!     <td class="tg-uqo3">251</td>
 //!     <td class="tg-uqo3">4</td>
 //!     <td class="tg-uqo3">0<br></td>
-//!     <td class="tg-uqo3">44.83 MB/s<br></td>
+//!     <td class="tg-uqo3">48.70 MB/s<br></td>
 //!   </tr>
 //!   <tr>
 //!     <td class="tg-baqh"><br></td>
 //!     <td class="tg-baqh"><br></td>
 //!     <td class="tg-baqh">1</td>
-//!     <td class="tg-baqh">16.96 MB/s<br></td>
+//!     <td class="tg-baqh">16.90 MB/s<br></td>
 //!   </tr>
 //!   <tr>
 //!     <td class="tg-baqh"><br></td>
 //!     <td class="tg-baqh"></td>
 //!     <td class="tg-baqh">2</td>
-//!     <td class="tg-baqh">15.69 MB/s<br></td>
+//!     <td class="tg-baqh">15.29 MB/s<br></td>
 //!   </tr>
 //!   <tr>
 //!     <td class="tg-uqo3">239</td>
 //!     <td class="tg-uqo3">16</td>
 //!     <td class="tg-uqo3">0</td>
-//!     <td class="tg-uqo3">9.93 MB/s<br></td>
+//!     <td class="tg-uqo3">10.74 MB/s<br></td>
 //!   </tr>
 //!   <tr>
 //!     <td class="tg-baqh"></td>
 //!     <td class="tg-baqh"></td>
 //!     <td class="tg-baqh">1</td>
-//!     <td class="tg-baqh">4.64 MB/s<br></td>
+//!     <td class="tg-baqh">4.84 MB/s<br></td>
 //!   </tr>
 //!   <tr>
 //!     <td class="tg-baqh"></td>
 //!     <td class="tg-baqh"></td>
 //!     <td class="tg-baqh">8</td>
-//!     <td class="tg-baqh">3.89 MB/s<br></td>
+//!     <td class="tg-baqh">3.78 MB/s<br></td>
 //!   </tr>
 //!   <tr>
 //!     <td class="tg-uqo3">223</td>
 //!     <td class="tg-uqo3">32</td>
 //!     <td class="tg-uqo3">0</td>
-//!     <td class="tg-uqo3">4.54 MB/s<br></td>
+//!     <td class="tg-uqo3">4.88 MB/s<br></td>
 //!   </tr>
 //!   <tr>
 //!     <td class="tg-baqh"></td>
 //!     <td class="tg-baqh"></td>
 //!     <td class="tg-baqh">1</td>
-//!     <td class="tg-baqh">2.20 MB/s<br></td>
+//!     <td class="tg-baqh">2.32 MB/s<br></td>
 //!   </tr>
 //!   <tr>
 //!     <td class="tg-baqh"></td>
 //!     <td class="tg-baqh"></td>
 //!     <td class="tg-baqh">16</td>
-//!     <td class="tg-baqh">1.67 MB/s<br></td>
+//!     <td class="tg-baqh">1.73 MB/s<br></td>
 //!   </tr>
 //! </table>
 
