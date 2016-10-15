@@ -27,12 +27,12 @@ use reed_solomon::Encoder;
 use reed_solomon::Decoder;
 
 fn main() {
-    let data = "Hello World!".as_bytes();
+     let data = "Hello, World!".as_bytes();
 
     // Length of error correction code
     let ecc_len = 8;
     
-    // Create encoder and decoder with 
+    // Create encoder and decoder
     let enc = Encoder::new(ecc_len);
     let dec = Decoder::new(ecc_len);
 
@@ -47,7 +47,7 @@ fn main() {
 
     // Try to recover data
     let known_erasures = [0];
-    let recovered = dec.decode(&corrupted, Some(&known_erasures)).unwrap();
+    let recovered = dec.correct(&mut corrupted, Some(&known_erasures)).unwrap();
 
     let orig_str = std::str::from_utf8(data).unwrap();
     let recv_str = std::str::from_utf8(recovered.data()).unwrap();

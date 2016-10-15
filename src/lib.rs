@@ -1,4 +1,4 @@
-//! Reed-Solomon BCH encoder and decoder suitable for no_std environment
+//! Reed-Solomon BCH encoder and decoder suitable for `no_std` environment
 //!
 //! This library implements block encoder and decoder: error correction code is appended to original data
 //!
@@ -30,7 +30,7 @@
 //! 
 //!     // Try to recover data
 //!     let known_erasures = [0];
-//!     let recovered = dec.decode(&corrupted, Some(&known_erasures)).unwrap();
+//!     let recovered = dec.correct(&mut corrupted, Some(&known_erasures)).unwrap();
 //! 
 //!     let orig_str = std::str::from_utf8(data).unwrap();
 //!     let recv_str = std::str::from_utf8(recovered.data()).unwrap();
@@ -55,7 +55,7 @@
 //! Besides this performance bound, current implementation is not very optimal
 //! and performs some unnecessary memcpys
 //!
-//! Encoder bandwidth using one Sandy Bridge core operating on 2.8 GHz:  
+//! Encoder bandwidth using one Sandy Bridge core operating on 2.8 `GHz`:  
 //! <style type="text/css">
 //! .tg  {border-collapse:collapse;border-spacing:0;border-color:#ccc;}
 //! .tg td{font-family:Arial, sans-serif;font-size:14px;padding:10px 5px;border-style:solid;border-width:1px;overflow:hidden;word-break:normal;border-color:#ccc;color:#333;background-color:#fff;}
@@ -85,7 +85,7 @@
 //!   </tr>
 //! </table>
 //! 
-//! Decoder bandwidth using one Sandy Bridge core operating on 2.8 GHz:
+//! Decoder bandwidth using one Sandy Bridge core operating on 2.8 `GHz`:
 //! <style type="text/css">
 //! .tg  {border-collapse:collapse;border-spacing:0;border-color:#ccc;}
 //! .tg td{font-family:Arial, sans-serif;font-size:14px;padding:10px 5px;border-style:solid;border-width:1px;overflow:hidden;word-break:normal;border-color:#ccc;color:#333;background-color:#fff;}

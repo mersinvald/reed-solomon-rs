@@ -24,7 +24,7 @@ fn main() {
 
     // Try to recover data
     let known_erasures = [0];
-    let recovered = dec.decode(&corrupted, Some(&known_erasures)).unwrap();
+    let recovered = dec.correct(&mut corrupted, Some(&known_erasures)).unwrap();
 
     let orig_str = std::str::from_utf8(data).unwrap();
     let recv_str = std::str::from_utf8(recovered.data()).unwrap();

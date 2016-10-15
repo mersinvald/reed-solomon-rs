@@ -51,12 +51,12 @@ impl Decoder {
     /// let known_erasures = [3];
     ///
     /// // Decode and correct message, 
-    /// let corrected = decoder.decode(&encoded, Some(&known_erasures)).unwrap();
+    /// let corrected = decoder.correct(&mut encoded, Some(&known_erasures)).unwrap();
     /// 
     /// // Check results
     /// assert_eq!(&[1, 2, 3, 4], corrected.data())
     /// ```
-    pub fn decode<'a>(&'a self, msg: &'a [u8], erase_pos: Option<&[u8]>) -> Result<Buffer, ReedSolomonError> {
+    pub fn correct(&self, msg: &mut [u8], erase_pos: Option<&[u8]>) -> Result<Buffer, ReedSolomonError> {
         let mut msg = Buffer::from_slice(msg, msg.len() - self.ecc_len);
 
         assert!(msg.len() < 256);
@@ -77,7 +77,7 @@ impl Decoder {
         let synd = self.calc_syndromes(&msg);
 
         // No errors
-        if synd.iter().max() == Some(&0) {
+        if synd.iter().all(|x| *x == 0) {
             return Ok(msg);
         }
 
@@ -100,6 +100,32 @@ impl Decoder {
         }
     }
 
+    /// Performs fast corruption check
+    ///
+    /// # Example
+    /// ```rust
+    /// use reed_solomon::Encoder;
+    /// use reed_solomon::Decoder;
+    ///
+    /// // Create encoder and decoder
+    /// let encoder = Encoder::new(4);
+    /// let decoder = Decoder::new(4);
+    ///
+    /// // Encode message
+    /// let mut encoded = encoder.encode(&[1, 2, 3, 4]);
+    /// 
+    /// assert_eq!(decoder.is_corrupted(&encoded), false);
+    ///
+    /// // Corrupt message
+    /// encoded[2] = 1;
+    /// encoded[3] = 2;
+    ///
+    /// assert_eq!(decoder.is_corrupted(&encoded), true);
+    /// ```
+    pub fn is_corrupted(&self, msg: &[u8]) -> bool {
+        (0..self.ecc_len).any(|x| msg.eval(gf::pow(2, x as i32)) != 0)
+    }
+
     fn calc_syndromes(&self, msg: &[u8]) -> Polynom {
         // index 0 is a pad for mathematical precision
         let mut synd = Polynom::with_length(self.ecc_len + 1);
@@ -108,10 +134,6 @@ impl Decoder {
         }
 
         synd
-    }
-
-    fn is_corrupted(&self, msg: &[u8]) -> bool {
-        self.calc_syndromes(msg).iter().max() != Some(&0)
     }
 
     fn find_errata_locator(&self, e_pos: &[u8]) -> Polynom {
@@ -397,7 +419,7 @@ mod tests {
 
     #[test]
     fn decode() {
-        let msg = [0, 2, 2, 2, 2, 2, 119, 111, 114, 108, 100, 145, 124, 96, 105, 94, 31, 179, 149,
+        let mut msg = [0, 2, 2, 2, 2, 2, 119, 111, 114, 108, 100, 145, 124, 96, 105, 94, 31, 179, 149,
                    163];
         let ecc = 9;
         let erase_pos = [0, 1, 2];
@@ -406,7 +428,7 @@ mod tests {
                       31, 179, 149, 163];
 
         let decoder = Decoder::new(ecc);
-        let decoded = decoder.decode(&msg[..], Some(&erase_pos)).unwrap();
+        let decoded = decoder.correct(&mut msg[..], Some(&erase_pos)).unwrap();
 
         assert_eq!(result, **decoded);
     }

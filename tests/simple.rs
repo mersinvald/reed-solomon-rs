@@ -23,7 +23,7 @@ fn helloworld() {
     }
 
     // Try to recover data
-    let recovered = dec.decode(&corrupted, None).unwrap();
+    let recovered = dec.correct(&mut corrupted, None).unwrap();
 
     assert_eq!(data, recovered.data());
 }
@@ -47,7 +47,7 @@ fn with_erasures() {
 
     // Try to recover data
     let known_erasures = [0, 1, 2];
-    let recovered = dec.decode(&corrupted, Some(&known_erasures)).unwrap();
+    let recovered = dec.correct(&mut corrupted, Some(&known_erasures)).unwrap();
 
     assert_eq!(data, recovered.data());
 }

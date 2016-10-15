@@ -9,6 +9,7 @@ pub trait Scale {
 
 pub trait Add {
     fn add(&self, rhs: &Self) -> Polynom;
+    fn add_assign(&mut self, rhs: &Self) -> &mut Self;
 }
 
 pub trait Mul {
@@ -55,6 +56,12 @@ impl Add for [u8] {
         }
 
         poly
+    }
+
+    fn add_assign(&mut self, rhs: &Self) -> &mut Self {
+        let poly = self.add(rhs);
+        self.copy_from_slice(&poly);
+        self
     }
 }
 

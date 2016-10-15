@@ -83,7 +83,9 @@ fn decoder_bandwidth(data_len: usize, ecc_len: usize, errors: usize) -> f32 {
 
         let mut bytes = 0;
         while thr_rx.try_recv().is_err() {
-            decoder.decode(&encoded, None).unwrap();            
+            if decoder.is_corrupted(&encoded) {
+                decoder.correct(&mut encoded, None).unwrap();
+            }            
             bytes += data_len;
         }
 
