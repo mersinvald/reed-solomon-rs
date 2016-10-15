@@ -10,16 +10,24 @@ macro_rules! polynom {
 
 macro_rules! uncheck {
     ($array:ident[$index:expr]) => {
-        unsafe {
-            *$array.get_unchecked($index)
+        if cfg!(feature = "unsafe_indexing") {
+            unsafe {
+                *$array.get_unchecked($index)
+            }
+        } else {
+            $array[$index]
         }
     }
 }
 
 macro_rules! uncheck_mut {
     ($array:ident[$index:expr]) => {
-        * unsafe {
-            $array.get_unchecked_mut($index)
+        * if cfg!(feature = "unsafe_indexing") {
+            unsafe {
+                $array.get_unchecked_mut($index)
+            }
+        } else {
+            &mut $array[$index]
         }
     }
 }

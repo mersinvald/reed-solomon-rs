@@ -11,3 +11,6 @@ version = "0.1.2"
 
 [dev-dependencies]
 rustc-serialize = "0.3"
+
+[features]
+unsafe_indexing = []
