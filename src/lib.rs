@@ -44,8 +44,11 @@
 //! ```
 //!
 //! # Unsafe
-//! This library utilizes unsafe `Slice::get_inchecked()` to improve speed where unchecked indexing
-//! is safe and LLVM cannot drop boundary checks
+//! This library uses some slices indexind that is boundary checked.
+//!
+//! You can disable checks with library feature `unsafe_indexing`, 
+//! then unsafe `Slice::get_inchecked()` would be utilized to improve speed where unchecked indexing
+//! is considered safe and LLVM cannot drop boundary checks
 //!
 //! # Bandwidth
 //! Software implementation is relatively slow because general purpose processors do not support
