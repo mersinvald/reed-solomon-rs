@@ -35,14 +35,14 @@ impl Decoder {
     /// ```rust
     /// use reed_solomon::Encoder;
     /// use reed_solomon::Decoder;
-    /// 
+    ///
     /// // Create encoder and decoder
     /// let encoder = Encoder::new(4);
     /// let decoder = Decoder::new(4);
     ///
     /// // Encode message
     /// let mut encoded = encoder.encode(&[1, 2, 3, 4]);
-    /// 
+    ///
     /// // Corrupt message
     /// encoded[2] = 1;
     /// encoded[3] = 2;
@@ -50,13 +50,16 @@ impl Decoder {
     /// // Let's assume it's known that `encoded[3]` is an error
     /// let known_erasures = [3];
     ///
-    /// // Decode and correct message, 
+    /// // Decode and correct message,
     /// let corrected = decoder.correct(&mut encoded, Some(&known_erasures)).unwrap();
-    /// 
+    ///
     /// // Check results
     /// assert_eq!(&[1, 2, 3, 4], corrected.data())
     /// ```
-    pub fn correct(&self, msg: &mut [u8], erase_pos: Option<&[u8]>) -> Result<Buffer, ReedSolomonError> {
+    pub fn correct(&self,
+                   msg: &mut [u8],
+                   erase_pos: Option<&[u8]>)
+                   -> Result<Buffer, ReedSolomonError> {
         let mut msg = Buffer::from_slice(msg, msg.len() - self.ecc_len);
 
         assert!(msg.len() < 256);
@@ -113,7 +116,7 @@ impl Decoder {
     ///
     /// // Encode message
     /// let mut encoded = encoder.encode(&[1, 2, 3, 4]);
-    /// 
+    ///
     /// assert_eq!(decoder.is_corrupted(&encoded), false);
     ///
     /// // Corrupt message
@@ -169,7 +172,7 @@ impl Decoder {
         let err_loc = self.find_errata_locator(&coef_pos);
         let synd = Polynom::from(synd);
         let err_eval = self.find_error_evaluator(&synd.reverse(), &err_loc, err_loc.len() - 1)
-                    .reverse();
+            .reverse();
 
         let mut X = Polynom::new();
 
@@ -361,8 +364,7 @@ mod tests {
 
     #[test]
     fn correct_errata() {
-        let msg = [0, 0, 0, 2, 2, 2, 119, 111, 114, 108, 100, 145, 124, 96, 105, 94, 31,
-                           179, 149, 163];
+        let msg = [0, 0, 0, 2, 2, 2, 119, 111, 114, 108, 100, 145, 124, 96, 105, 94, 31, 179, 149, 163];
         let synd = [0, 64, 42, 242, 59, 109, 56, 78, 103, 232];
         let err_pos = [0, 1, 2, 5, 4, 3];
         let result = [104, 101, 108, 108, 111, 32, 119, 111, 114, 108, 100, 145, 124, 96, 105, 94,
@@ -419,8 +421,7 @@ mod tests {
 
     #[test]
     fn decode() {
-        let mut msg = [0, 2, 2, 2, 2, 2, 119, 111, 114, 108, 100, 145, 124, 96, 105, 94, 31, 179, 149,
-                   163];
+        let mut msg = [0, 2, 2, 2, 2, 2, 119, 111, 114, 108, 100, 145, 124, 96, 105, 94, 31, 179, 149, 163];
         let ecc = 9;
         let erase_pos = [0, 1, 2];
 

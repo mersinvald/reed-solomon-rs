@@ -5,36 +5,36 @@
 //! # Example
 //! ```rust
 //! extern crate reed_solomon;
-//! 
+//!
 //! use reed_solomon::Encoder;
 //! use reed_solomon::Decoder;
-//! 
+//!
 //! fn main() {
 //!     let data = b"Hello World!";
-//! 
+//!
 //!     // Length of error correction code
 //!     let ecc_len = 8;
-//! 
-//!     // Create encoder and decoder with 
+//!
+//!     // Create encoder and decoder with
 //!     let enc = Encoder::new(ecc_len);
 //!     let dec = Decoder::new(ecc_len);
-//! 
+//!
 //!     // Encode data
 //!     let encoded = enc.encode(&data[..]);
-//! 
+//!
 //!     // Simulate some transmission errors
 //!     let mut corrupted = *encoded;
 //!     for i in 0..4 {
 //!         corrupted[i] = 0x0;
 //!     }
-//! 
+//!
 //!     // Try to recover data
 //!     let known_erasures = [0];
 //!     let recovered = dec.correct(&mut corrupted, Some(&known_erasures)).unwrap();
-//! 
+//!
 //!     let orig_str = std::str::from_utf8(data).unwrap();
 //!     let recv_str = std::str::from_utf8(recovered.data()).unwrap();
-//! 
+//!
 //!     println!("message:               {:?}", orig_str);
 //!     println!("original data:         {:?}", data);
 //!     println!("error correction code: {:?}", encoded.ecc());
@@ -42,20 +42,20 @@
 //!     println!("repaired:              {:?}", recv_str);
 //! }
 //! ```
-//! 
+//!
 //! # Unsafe
 //! This library utilizes unsafe `Slice::get_inchecked()` to improve speed where unchecked indexing
 //! is safe and LLVM cannot drop boundary checks
 //!
 //! # Bandwidth
-//! Software implementation is relatively slow because general purpose processors do not support 
-//! Galois field arithmetic operations. For example, Galois field multiply requires test for 0, 
+//! Software implementation is relatively slow because general purpose processors do not support
+//! Galois field arithmetic operations. For example, Galois field multiply requires test for 0,
 //! two table look-ups, modulo add, and anti-log table look-up.
 //!
 //! Besides this performance bound, current implementation is not very optimal
 //! and performs some unnecessary memcpys
 //!
-//! Encoder bandwidth using one Sandy Bridge core operating on 2.8 `GHz`:  
+//! Encoder bandwidth using one Sandy Bridge core operating on 2.8 `GHz`:
 //! <style type="text/css">
 //! .tg  {border-collapse:collapse;border-spacing:0;border-color:#ccc;}
 //! .tg td{font-family:Arial, sans-serif;font-size:14px;padding:10px 5px;border-style:solid;border-width:1px;overflow:hidden;word-break:normal;border-color:#ccc;color:#333;background-color:#fff;}
@@ -84,7 +84,7 @@
 //!     <td class="tg-baqh">16.32 MB/s<br></td>
 //!   </tr>
 //! </table>
-//! 
+//!
 //! Decoder bandwidth using one Sandy Bridge core operating on 2.8 `GHz`:
 //! <style type="text/css">
 //! .tg  {border-collapse:collapse;border-spacing:0;border-color:#ccc;}

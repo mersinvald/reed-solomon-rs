@@ -9,7 +9,7 @@ pub struct Encoder {
     generator: Polynom,
 }
 
-impl Encoder {   
+impl Encoder {
     /// Constructs a new `Encoder` and calculates generator polynomial of given `ecc_len`
     ///
     /// # Example
@@ -17,7 +17,7 @@ impl Encoder {
     /// use reed_solomon::Encoder;
     ///
     /// let encoder = Encoder::new(8);
-    /// ``` 
+    /// ```
     pub fn new(ecc_len: usize) -> Self {
         Encoder { generator: generator_poly(ecc_len) }
     }
@@ -46,7 +46,7 @@ impl Encoder {
         let (_, rem) = data.div(&self.generator);
 
         data.length = data_len;
-        
+
         let mut data = Buffer::from(data);
         data.append(&rem);
         data
