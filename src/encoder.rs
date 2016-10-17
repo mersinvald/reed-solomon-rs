@@ -38,18 +38,29 @@ impl Encoder {
     /// println!("ecc:   {:?}", encoded.ecc());
     /// ```
     pub fn encode(&self, data: &[u8]) -> Buffer {
-        let mut data = Polynom::from(data);
+        let mut data_out = Polynom::from(data);
         let data_len = data.len();
 
-        data.length += self.generator.len() - 1;
+        data_out.set_length(data_len + self.generator.len() - 1);
 
-        let (_, rem) = data.div(&self.generator);
+        let gen = self.generator;
+        let mut lgen = Polynom::with_length(self.generator.len());
+        for (i, gen_i) in gen.iter().enumerate() {
+            uncheck_mut!(lgen[i]) = gf::LOG[*gen_i as usize];
+        } 
+        
+        for i in 0..data_len {
+            let coef = uncheck!(data_out[i]);
+            if coef != 0 {
+                let lcoef = gf::LOG[coef as usize] as usize;
+                for j in 1..gen.len() {
+                    uncheck_mut!(data_out[i + j]) ^= gf::EXP[(lcoef + lgen[j] as usize)];
+                }
+            }
+        }
 
-        data.length = data_len;
-
-        let mut data = Buffer::from(data);
-        data.append(&rem);
-        data
+        data_out[..data_len].copy_from_slice(data);
+        Buffer::from_polynom(data_out, data_len)
     }
 }
 

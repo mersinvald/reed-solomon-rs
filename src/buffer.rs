@@ -46,7 +46,7 @@ impl Buffer {
     /// Add byte string to the end of buffer
     pub fn append(&mut self, rhs: &[u8]) {
         let ofst = self.len();
-        self.length += rhs.len();
+        self.set_length(ofst + rhs.len());
         for (i, rhs_x) in rhs.iter().enumerate() {
             self[i + ofst] = *rhs_x;
         }

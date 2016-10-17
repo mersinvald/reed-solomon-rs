@@ -1,7 +1,8 @@
 #[derive(Copy)]
 pub struct Polynom {
-    pub array: [u8; ::POLYNOMIAL_MAX_LENGTH],
-    pub length: usize,
+    array: [u8; ::POLYNOMIAL_MAX_LENGTH],
+    length: usize,
+    dirty: bool,
 }
 
 impl Polynom {
@@ -10,6 +11,7 @@ impl Polynom {
         Polynom {
             array: [0; ::POLYNOMIAL_MAX_LENGTH],
             length: 0,
+            dirty: false,
         }
     }
 
@@ -18,6 +20,22 @@ impl Polynom {
         let mut p = Polynom::new();
         p.length = len;
         p
+    }
+
+    #[inline]
+    pub fn set_length(&mut self, new_len: usize) {
+        let old_len = self.len();
+        self.length = new_len;
+        
+        if self.dirty && new_len > old_len {
+            for x in self.iter_mut().skip(old_len)
+                                    .take(new_len - old_len) 
+            {
+                *x = 0;
+            }
+        } else if new_len < old_len {
+            self.dirty = true;
+        }
     }
 
     #[inline]
@@ -35,17 +53,6 @@ impl Polynom {
     pub fn push(&mut self, x: u8) {
         self.array[self.length] = x;
         self.length += 1;
-    }
-
-    #[inline]
-    pub fn shrink(&mut self, new_len: usize) {
-        if new_len < self.len() {
-            for x in self.iter_mut().skip(new_len) {
-                *x = 0;
-            }
-        }
-
-        self.length = new_len;
     }
 }
 
@@ -85,14 +92,9 @@ impl<'a> From<&'a [u8]> for Polynom {
     #[inline]
     fn from(slice: &'a [u8]) -> Polynom {
         debug_assert!(slice.len() <= ::POLYNOMIAL_MAX_LENGTH);
-        let mut new_array = [0; ::POLYNOMIAL_MAX_LENGTH];
-
-        new_array[0..slice.len()].copy_from_slice(slice);
-
-        Polynom {
-            array: new_array,
-            length: slice.len(),
-        }
+        let mut poly = Polynom::with_length(slice.len());
+        poly[..].copy_from_slice(slice);
+        poly
     }
 }
 
@@ -125,15 +127,24 @@ mod tests {
     }
 
     #[test]
-    fn shrink() {
-        let mut poly = polynom![1; 16];
-        poly.shrink(2);
+    fn set_length() {
+        let mut poly = polynom![1; 8];
+
+        println!("{:?}", poly);
+
+        poly.set_length(2);
+
+        println!("{:?}", poly);
+
+        poly.set_length(6);
+
+        println!("{:?}", poly);
 
         for i in 0..2 {
             assert_eq!(poly.array[i], 1);
         }
 
-        for i in 2..256 {
+        for i in 2..6 {
             assert_eq!(poly.array[i], 0);
         }
     }

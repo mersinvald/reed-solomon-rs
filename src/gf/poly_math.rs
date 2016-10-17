@@ -91,7 +91,7 @@ impl Div for [u8] {
         }
 
         for i in 0..(self.len() - divisor_degree) {
-            let coef = poly[i];
+            let coef = uncheck!(poly[i]);
             if coef != 0 {
                 for j in 1..rhs.len() {
                     if rhs[j] != 0 {
@@ -107,7 +107,7 @@ impl Div for [u8] {
         let remainder = Polynom::from(&poly[separator..]);
 
         // And reminder is before separator, so just shrink to it
-        poly.shrink(separator);
+        poly.set_length(separator);
 
         (poly, remainder)
     }

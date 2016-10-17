@@ -258,17 +258,10 @@ impl Decoder {
             }
         }
 
-        let mut shift = 0;
-        while err_loc.len() - shift > 0 && err_loc[shift] == 0 {
-            shift += 1;
-        }
-
-        err_loc.reverse();
-        err_loc.length = err_loc.len() - shift;
-        err_loc.reverse();
+        let shift = err_loc.iter().take_while(|&&v| v == 0).count();
+        let err_loc = Polynom::from(&err_loc[shift..]);
 
         let errs = err_loc.len() - 1;
-
         let errs = if erase_count > errs {
             erase_count
         } else {

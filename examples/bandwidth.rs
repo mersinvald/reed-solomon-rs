@@ -35,18 +35,13 @@ fn encoder_bandwidth(data_len: usize, ecc_len: usize) -> f32 {
     let (thr_tx, rx) = mpsc::channel();
     
     thread::spawn(move || {
-        let mut generator = Generator::new();
+        let generator = Generator::new();
         let encoder = Encoder::new(ecc_len);
 
-        let mut buffer = vec![0; data_len];
+        let buffer: Vec<u8> = generator.take(data_len).collect();
         let mut bytes = 0;
         while thr_rx.try_recv().is_err() {
-            for x in buffer.iter_mut() {
-                *x = generator.next().unwrap(); 
-            }
-
             encoder.encode(&buffer);
-
             bytes += data_len;
         }
 
