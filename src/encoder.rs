@@ -10,7 +10,7 @@ pub struct Encoder {
 }
 
 impl Encoder {
-    /// Constructs a new `Encoder` and calculates generator polynomial of given `ecc_len`
+    /// Constructs a new `Encoder` and calculates generator polynomial of given `ecc_len`.
     ///
     /// # Example
     /// ```rust
@@ -22,7 +22,7 @@ impl Encoder {
         Encoder { generator: generator_poly(ecc_len) }
     }
 
-    /// Encodes passed `&[u8]` slice and returns `Buffer` with result and `ecc` offset
+    /// Encodes passed `&[u8]` slice and returns `Buffer` with result and `ecc` offset.
     ///
     /// # Example
     /// ```rust

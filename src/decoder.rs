@@ -17,7 +17,7 @@ pub struct Decoder {
 }
 
 impl Decoder {
-    /// Constructs a new `Decoder`
+    /// Constructs a new `Decoder`.
     ///
     /// # Example
     /// ```rust
@@ -29,7 +29,7 @@ impl Decoder {
         Decoder { ecc_len: ecc_len }
     }
 
-    /// Decodes block-encoded message and returns `Buffer` with corrected message and ecc offset
+    /// Decodes block-encoded message and returns `Buffer` with corrected message and ecc offset.
     ///
     /// # Example
     /// ```rust
@@ -103,7 +103,7 @@ impl Decoder {
         }
     }
 
-    /// Performs fast corruption check
+    /// Performs fast corruption check.
     ///
     /// # Example
     /// ```rust

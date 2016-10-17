@@ -1,6 +1,6 @@
-//! Reed-Solomon BCH encoder and decoder suitable for `no_std` environment
+//! Reed-Solomon BCH encoder and decoder suitable for `no_std` environment.
 //!
-//! This library implements block encoder and decoder: error correction code is appended to original data
+//! This library implements block encoder and decoder: error correction code is appended to original data.
 //!
 //! # Example
 //! ```rust
@@ -48,7 +48,7 @@
 //!
 //! You can disable checks with library feature `unsafe_indexing`, 
 //! then unsafe `Slice::get_inchecked()` would be utilized to improve speed where unchecked indexing
-//! is considered safe and LLVM cannot drop boundary checks
+//! is considered safe and LLVM cannot drop boundary checks.
 //!
 //! # Bandwidth
 //! Software implementation is relatively slow because general purpose processors do not support
@@ -56,7 +56,7 @@
 //! two table look-ups, modulo add, and anti-log table look-up.
 //!
 //! Besides this performance bound, current implementation is not very optimal
-//! and performs some unnecessary memcpys
+//! and performs some unnecessary memcpys.
 //!
 //! Encoder bandwidth using one Sandy Bridge core operating on 2.8 `GHz`:
 //! <style type="text/css">
