@@ -178,5 +178,5 @@ mod buffer;
 
 pub use encoder::Encoder;
 pub use decoder::Decoder;
-pub use decoder::ReedSolomonError;
+pub use decoder::DecoderError;
 pub use buffer::Buffer;

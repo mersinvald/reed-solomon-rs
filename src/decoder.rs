@@ -1,3 +1,4 @@
+use core;
 use ::gf::poly_math::*;
 use ::gf::poly::Polynom;
 use ::buffer::Buffer;
@@ -5,10 +6,12 @@ use ::gf;
 
 /// Decoder error
 #[derive(Debug, Copy, Clone)]
-pub enum ReedSolomonError {
+pub enum DecoderError {
     /// Message is unrecoverably corrupted
     TooManyErrors,
 }
+
+type Result<T> = core::result::Result<T, DecoderError>;
 
 /// Reed-Solomon BCH decoder
 #[derive(Debug)]
@@ -59,7 +62,7 @@ impl Decoder {
     pub fn correct(&self,
                    msg: &mut [u8],
                    erase_pos: Option<&[u8]>)
-                   -> Result<Buffer, ReedSolomonError> {
+                   -> Result<Buffer> {
         let mut msg = Buffer::from_slice(msg, msg.len() - self.ecc_len);
 
         assert!(msg.len() < 256);
@@ -74,7 +77,7 @@ impl Decoder {
         };
 
         if erase_pos.len() > self.ecc_len {
-            return Err(ReedSolomonError::TooManyErrors);
+            return Err(DecoderError::TooManyErrors);
         }
 
         let synd = self.calc_syndromes(&msg);
@@ -97,7 +100,7 @@ impl Decoder {
 
         // Check output message correctness
         if self.is_corrupted(&msg_out) {
-            Err(ReedSolomonError::TooManyErrors)
+            Err(DecoderError::TooManyErrors)
         } else {
             Ok(Buffer::from_polynom(msg_out, msg.len() - self.ecc_len))
         }
@@ -216,7 +219,7 @@ impl Decoder {
                           synd: &[u8],
                           erase_loc: Option<&[u8]>,
                           erase_count: usize)
-                          -> Result<Polynom, ReedSolomonError> {
+                          -> Result<Polynom> {
         let (mut err_loc, mut old_loc) = if let Some(erase_loc) = erase_loc {
             (Polynom::from(erase_loc), Polynom::from(erase_loc))
         } else {
@@ -273,13 +276,13 @@ impl Decoder {
         };
 
         if errs > self.ecc_len {
-            Err(ReedSolomonError::TooManyErrors)
+            Err(DecoderError::TooManyErrors)
         } else {
             Ok(err_loc)
         }
     }
 
-    fn find_errors(&self, err_loc: &[u8], msg_len: usize) -> Result<Polynom, ReedSolomonError> {
+    fn find_errors(&self, err_loc: &[u8], msg_len: usize) -> Result<Polynom> {
         let errs = err_loc.len() - 1;
         let mut err_pos = polynom![];
 
@@ -291,7 +294,7 @@ impl Decoder {
         }
 
         if err_pos.len() != errs {
-            Err(ReedSolomonError::TooManyErrors)
+            Err(DecoderError::TooManyErrors)
         } else {
             Ok(err_pos)
         }
