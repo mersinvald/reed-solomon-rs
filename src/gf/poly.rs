@@ -129,16 +129,8 @@ mod tests {
     #[test]
     fn set_length() {
         let mut poly = polynom![1; 8];
-
-        println!("{:?}", poly);
-
         poly.set_length(2);
-
-        println!("{:?}", poly);
-
         poly.set_length(6);
-
-        println!("{:?}", poly);
 
         for i in 0..2 {
             assert_eq!(poly.array[i], 1);
