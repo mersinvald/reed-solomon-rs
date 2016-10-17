@@ -21,19 +21,6 @@ impl Polynom {
     }
 
     #[inline]
-    pub fn copy_from_slice(slice: &[u8]) -> Polynom {
-        debug_assert!(slice.len() <= ::POLYNOMIAL_MAX_LENGTH);
-        let mut new_array = [0; ::POLYNOMIAL_MAX_LENGTH];
-
-        new_array[0..slice.len()].copy_from_slice(slice);
-
-        Polynom {
-            array: new_array,
-            length: slice.len(),
-        }
-    }
-
-    #[inline]
     pub fn len(&self) -> usize {
         self.length
     }
@@ -53,8 +40,8 @@ impl Polynom {
     #[inline]
     pub fn shrink(&mut self, new_len: usize) {
         if new_len < self.len() {
-            for i in new_len..self.len() {
-                self[i] = 0;
+            for x in self.iter_mut().skip(new_len) {
+                *x = 0;
             }
         }
 
@@ -69,12 +56,19 @@ impl Clone for Polynom {
     }
 }
 
+impl Default for Polynom {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 use core::ops::Deref;
 impl Deref for Polynom {
     type Target = [u8];
     #[inline]
     fn deref(&self) -> &Self::Target {
-        &self.array[0..self.len()]
+        let len = self.len();
+        &self.array[0..len]
     }
 }
 
@@ -89,8 +83,16 @@ impl DerefMut for Polynom {
 
 impl<'a> From<&'a [u8]> for Polynom {
     #[inline]
-    fn from(s: &'a [u8]) -> Polynom {
-        Polynom::copy_from_slice(s)
+    fn from(slice: &'a [u8]) -> Polynom {
+        debug_assert!(slice.len() <= ::POLYNOMIAL_MAX_LENGTH);
+        let mut new_array = [0; ::POLYNOMIAL_MAX_LENGTH];
+
+        new_array[0..slice.len()].copy_from_slice(slice);
+
+        Polynom {
+            array: new_array,
+            length: slice.len(),
+        }
     }
 }
 
@@ -104,10 +106,35 @@ impl fmt::Debug for Polynom {
 #[cfg(test)]
 mod tests {
     #[test]
+    fn push() {
+        let mut poly = polynom![];
+        for i in 0..10 {
+            poly.push(i);
+            for j in 0..(i as usize) {
+                assert!(poly[j] == j as u8);
+            }
+        }
+    }
+
+    #[test]
     fn reverse() {
         let poly = polynom![5, 4, 3, 2, 1, 0];
         for (i, x) in poly.reverse().iter().enumerate() {
             assert_eq!(i, *x as usize);
+        }
+    }
+
+    #[test]
+    fn shrink() {
+        let mut poly = polynom![1; 16];
+        poly.shrink(2);
+
+        for i in 0..2 {
+            assert_eq!(poly.array[i], 1);
+        }
+
+        for i in 2..256 {
+            assert_eq!(poly.array[i], 0);
         }
     }
 }

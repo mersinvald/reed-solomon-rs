@@ -7,7 +7,7 @@ const ECC_LEN: usize = 8;
 
 #[test]
 fn helloworld() {
-    let data = "Hello, World!".as_bytes();
+    let data = b"Hello, World!";
 
     // Create encoder and decoder
     let enc = Encoder::new(ECC_LEN);
@@ -17,9 +17,9 @@ fn helloworld() {
     let encoded = enc.encode(&data[..]);
 
     // Simulate some transmission errors
-    let mut corrupted = encoded.clone();
+    let mut corrupted = *encoded;
     for i in 0..4 {
-        corrupted[i] = 0xEE;
+        corrupted[i] = 0x0;
     }
 
     // Try to recover data
@@ -30,7 +30,7 @@ fn helloworld() {
 
 #[test]
 fn with_erasures() {
-    let data = "Hello, World!".as_bytes();
+    let data = b"Hello, World!";
 
     // Create encoder and decoder
     let enc = Encoder::new(ECC_LEN);
@@ -40,9 +40,9 @@ fn with_erasures() {
     let encoded = enc.encode(&data[..]);
 
     // Simulate some transmission errors
-    let mut corrupted = encoded.clone();
+    let mut corrupted = *encoded;
     for i in 0..4 {
-        corrupted[i] = 0xEE;
+        corrupted[i] = 0x0;
     }
 
     // Try to recover data

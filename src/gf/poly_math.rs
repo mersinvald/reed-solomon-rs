@@ -27,15 +27,15 @@ pub trait Eval {
 impl Scale for [u8] {
     #[inline]
     fn scale(&self, x: u8) -> Polynom {
-        let mut poly = Polynom::copy_from_slice(self);
+        let mut poly = Polynom::from(self);
         poly.scale_assign(x);
         poly
     }
 
     #[inline]
     fn scale_assign(&mut self, x: u8) -> &mut Self {
-        for i in 0..self.len() {
-            self[i] = gf::mul(self[i], x);
+        for px in self.iter_mut() {
+            *px = gf::mul(*px, x);
         }
         self
     }
@@ -45,14 +45,14 @@ impl Add for [u8] {
     fn add(&self, rhs: &Self) -> Polynom {
         let mut poly = Polynom::with_length(max(self.len(), rhs.len()));
 
-        for i in 0..self.len() {
+        for (i, x) in self.iter().enumerate() {
             let index = i + poly.len() - self.len();
-            uncheck_mut!(poly[index]) = self[i];
+            uncheck_mut!(poly[index]) = *x;
         }
 
-        for i in 0..rhs.len() {
+        for (i, x) in rhs.iter().enumerate() {
             let index = i + poly.len() - rhs.len();
-            uncheck_mut!(poly[index]) ^= rhs[i];
+            uncheck_mut!(poly[index]) ^= *x;
         }
 
         poly
@@ -70,9 +70,9 @@ impl Mul for [u8] {
     fn mul(&self, rhs: &Self) -> Polynom {
         let mut poly = Polynom::with_length(self.len() + rhs.len() - 1);
 
-        for j in 0..rhs.len() {
-            for i in 0..self.len() {
-                uncheck_mut!(poly[i + j]) ^= gf::mul(self[i], rhs[j]);
+        for (j, rhs_x) in rhs.iter().enumerate() {
+            for (i, self_x) in self.iter().enumerate() {
+                uncheck_mut!(poly[i + j]) ^= gf::mul(*self_x, *rhs_x);
             }
         }
 
@@ -82,7 +82,7 @@ impl Mul for [u8] {
 
 impl Div for [u8] {
     fn div(&self, rhs: &Self) -> (Polynom, Polynom) {
-        let mut poly = Polynom::copy_from_slice(self);
+        let mut poly = Polynom::from(self);
 
         // If divisor's degree (len-1) is bigger, all dividend is a remainder
         let divisor_degree = rhs.len() - 1;
@@ -104,7 +104,7 @@ impl Div for [u8] {
         let separator = self.len() - (rhs.len() - 1);
 
         // Quotient is after separator
-        let remainder = Polynom::copy_from_slice(&poly[separator..]);
+        let remainder = Polynom::from(&poly[separator..]);
 
         // And reminder is before separator, so just shrink to it
         poly.shrink(separator);

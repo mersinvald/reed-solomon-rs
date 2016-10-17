@@ -5,14 +5,12 @@ use reed_solomon::Encoder;
 use reed_solomon::Decoder;
 
 struct Generator {
-    pub bytes: u64,
     pub num: u8
 }
 
 impl Generator {
     fn new() -> Generator {
         Generator {
-            bytes: 0,
             num: 2
         }
     }
@@ -21,7 +19,6 @@ impl Generator {
 impl Iterator for Generator {
     type Item = u8;
     fn next(&mut self) -> Option<u8> {
-        self.bytes += 1;
         self.num = self.num.rotate_right(1);
         Some(self.num)
     }
@@ -42,15 +39,18 @@ fn encoder_bandwidth(data_len: usize, ecc_len: usize) -> f32 {
         let encoder = Encoder::new(ecc_len);
 
         let mut buffer = vec![0; data_len];
+        let mut bytes = 0;
         while thr_rx.try_recv().is_err() {
-            for i in 0..data_len {
-                buffer[i] = generator.next().unwrap(); 
+            for x in buffer.iter_mut() {
+                *x = generator.next().unwrap(); 
             }
 
             encoder.encode(&buffer);
+
+            bytes += data_len;
         }
 
-        thr_tx.send(generator.bytes).unwrap();
+        thr_tx.send(bytes).unwrap();
     });
 
     thread::sleep(Duration::from_secs(1));
@@ -61,24 +61,21 @@ fn encoder_bandwidth(data_len: usize, ecc_len: usize) -> f32 {
     kbytes / 1024.0
 }
 
+// Returns MB/s
 fn decoder_bandwidth(data_len: usize, ecc_len: usize, errors: usize) -> f32 {
      // Measure decoder bandwidth
     let (tx, thr_rx) = mpsc::channel();
     let (thr_tx, rx) = mpsc::channel();
     
     thread::spawn(move || {
-        let mut generator = Generator::new();
+        let generator = Generator::new();
         let encoder = Encoder::new(ecc_len);
         let decoder = Decoder::new(ecc_len);
 
-        let mut buffer = vec![0; data_len];
-        for i in 0..data_len {
-            buffer[i] = generator.next().unwrap(); 
-        }
-
+        let buffer: Vec<u8> = generator.take(data_len).collect();
         let mut encoded = encoder.encode(&buffer);
-        for i in 0..errors {
-            encoded[i] = 0;
+        for x in encoded.iter_mut().take(errors) {
+            *x = 0;
         } 
 
         let mut bytes = 0;

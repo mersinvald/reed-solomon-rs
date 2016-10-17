@@ -4,7 +4,7 @@ use reed_solomon::Encoder;
 use reed_solomon::Decoder;
 
 fn main() {
-    let data = "Hello World!".as_bytes();
+    let data = b"Hello World!";
 
     // Length of error correction code
     let ecc_len = 8;
@@ -17,9 +17,9 @@ fn main() {
     let encoded = enc.encode(&data[..]);
 
     // Simulate some transmission errors
-    let mut corrupted = encoded.clone();
-    for i in 0..4 {
-        corrupted[i] = 0xEE;
+    let mut corrupted = *encoded;
+    for x in corrupted.iter_mut().take(4) {
+        *x = 0x0;
     }
 
     // Try to recover data

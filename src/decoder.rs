@@ -81,7 +81,7 @@ impl Decoder {
             return Ok(msg);
         }
 
-        let fsynd = self.forney_syndromes(&synd, &erase_pos, msg.len());
+        let fsynd = self.forney_syndromes(&synd, erase_pos, msg.len());
         let err_loc = try!(self.find_error_locator(&fsynd, None, erase_pos.len()));
         let mut err_pos = try!(self.find_errors(&err_loc.reverse(), msg.len()));
 
@@ -167,7 +167,7 @@ impl Decoder {
         }
 
         let err_loc = self.find_errata_locator(&coef_pos);
-        let synd = Polynom::copy_from_slice(synd);
+        let synd = Polynom::from(synd);
         let err_eval = self.find_error_evaluator(&synd.reverse(), &err_loc, err_loc.len() - 1)
                     .reverse();
 
@@ -185,9 +185,9 @@ impl Decoder {
             let Xi_inv = gf::inverse(*Xi);
 
             let mut err_loc_prime_tmp = Polynom::new();
-            for j in 0..X.len() {
+            for (j, Xj) in X.iter().enumerate() {
                 if j != i {
-                    err_loc_prime_tmp.push(gf::sub(1, gf::mul(Xi_inv, X[j])));
+                    err_loc_prime_tmp.push(gf::sub(1, gf::mul(Xi_inv, *Xj)));
                 }
             }
 
@@ -300,10 +300,10 @@ impl Decoder {
             erase_pos_rev[i] = msg_len as u8 - 1 - x;
         }
 
-        let mut fsynd = Polynom::copy_from_slice(&synd[1..]);
+        let mut fsynd = Polynom::from(&synd[1..]);
 
-        for i in 0..pos.len() {
-            let x = gf::pow(2, erase_pos_rev[i] as i32);
+        for pos in erase_pos_rev.iter() {
+            let x = gf::pow(2, *pos as i32);
             for j in 0..(fsynd.len() - 1) {
                 fsynd[j] = gf::mul(fsynd[j], x) ^ fsynd[j + 1];
             }

@@ -1,11 +1,13 @@
 macro_rules! polynom {
-    [$value:expr; $count:expr] => {
-        $crate::gf::poly::Polynom::copy_from_slice(&[$value; $count])
-    }; 
+    [$value:expr; $count:expr] => {{
+        let array = [$value; $count];
+        $crate::gf::poly::Polynom::from(&array[..])
+    }}; 
 
-    [$( $value:expr ),* ] => {
-        $crate::gf::poly::Polynom::copy_from_slice(&[$($value, )*])
-    };
+    [$( $value:expr ),* ] => {{
+        let array = [$($value, )*];
+        $crate::gf::poly::Polynom::from(&array[..])
+    }};
 }
 
 macro_rules! uncheck {
