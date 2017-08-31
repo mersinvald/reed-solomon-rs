@@ -60,7 +60,7 @@ impl Decoder {
     /// assert_eq!(&[1, 2, 3, 4], corrected.data())
     /// ```
     pub fn correct(&self,
-                   msg: &mut [u8],
+                   msg: &[u8],
                    erase_pos: Option<&[u8]>)
                    -> Result<Buffer> {
         let mut msg = Buffer::from_slice(msg, msg.len() - self.ecc_len);
