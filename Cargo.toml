@@ -7,7 +7,7 @@ readme = "README.md"
 license = "MIT"
 keywords = ["cryptography", "ecc", "bch", "no_std"]
 authors = ["Mike Lubinets <lubinetsm@yandex.ru>"]
-version = "0.1.6"
+version = "0.2.0"
 
 [dev-dependencies]
 rustc-serialize = "0.3"
