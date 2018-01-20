@@ -11,7 +11,7 @@ This is a port of python implementation from [Wikiversity](https://en.wikiversit
 
 ```toml
 [dependencies]
-reed-solomon = "0.1"
+reed-solomon = "0.2"
 ```
 
 ```rust
