@@ -33,6 +33,82 @@ impl Decoder {
     }
 
     /// Decodes block-encoded message and returns `Buffer` with corrected message and ecc offset.
+    /// Also includes the number of errors corrected.
+    ///
+    /// # Example
+    /// ```rust
+    /// use reed_solomon::Encoder;
+    /// use reed_solomon::Decoder;
+    ///
+    /// // Create encoder and decoder
+    /// let encoder = Encoder::new(4);
+    /// let decoder = Decoder::new(4);
+    ///
+    /// // Encode message
+    /// let mut encoded = encoder.encode(&[1, 2, 3, 4]);
+    ///
+    /// // Corrupt message
+    /// encoded[2] = 1;
+    /// encoded[3] = 2;
+    ///
+    /// // Let's assume it's known that `encoded[3]` is an error
+    /// let known_erasures = [3];
+    ///
+    /// // Decode and correct message,
+    /// let corrected = decoder.correct(&mut encoded, Some(&known_erasures)).unwrap();
+    ///
+    /// // Check results
+    /// assert_eq!(&[1, 2, 3, 4], corrected.data())
+    /// ```
+
+    pub fn correct_err_count(&self,
+                             msg: &[u8],
+                             erase_pos: Option<&[u8]>)
+                             -> Result<(Buffer, usize)> {
+       let mut msg = Buffer::from_slice(msg, msg.len() - self.ecc_len);
+
+        assert!(msg.len() < 256);
+
+        let erase_pos = if let Some(erase_pos) = erase_pos {
+            for e_pos in erase_pos {
+                msg[*e_pos as usize] = 0;
+            }
+            erase_pos
+        } else {
+            &[]
+        };
+
+        if erase_pos.len() > self.ecc_len {
+            return Err(DecoderError::TooManyErrors);
+        }
+
+        let synd = self.calc_syndromes(&msg);
+
+        // No errors
+        if synd.iter().all(|x| *x == 0) {
+            return Ok((msg,0));
+        }
+
+        let fsynd = self.forney_syndromes(&synd, erase_pos, msg.len());
+        let err_loc = try!(self.find_error_locator(&fsynd, None, erase_pos.len()));
+        let mut err_pos = try!(self.find_errors(&err_loc.reverse(), msg.len()));
+
+        // Append erase_pos to err_pos
+        for x in erase_pos.iter() {
+            err_pos.push(*x);
+        }
+
+        let (msg_out, fixed) = self.correct_errata(&msg, &synd, &err_pos);
+
+        // Check output message correctness
+        if self.is_corrupted(&msg_out) {
+            Err(DecoderError::TooManyErrors)
+        } else {
+            Ok((Buffer::from_polynom(msg_out, msg.len() - self.ecc_len), fixed))
+        }
+    }
+
+    /// Decodes block-encoded message and returns `Buffer` with corrected message and ecc offset.
     ///
     /// # Example
     /// ```rust
@@ -63,48 +139,8 @@ impl Decoder {
                    msg: &[u8],
                    erase_pos: Option<&[u8]>)
                    -> Result<Buffer> {
-        let mut msg = Buffer::from_slice(msg, msg.len() - self.ecc_len);
-
-        assert!(msg.len() < 256);
-
-        let erase_pos = if let Some(erase_pos) = erase_pos {
-            for e_pos in erase_pos {
-                msg[*e_pos as usize] = 0;
-            }
-            erase_pos
-        } else {
-            &[]
-        };
-
-        if erase_pos.len() > self.ecc_len {
-            return Err(DecoderError::TooManyErrors);
-        }
-
-        let synd = self.calc_syndromes(&msg);
-
-        // No errors
-        if synd.iter().all(|x| *x == 0) {
-            return Ok(msg);
-        }
-
-        let fsynd = self.forney_syndromes(&synd, erase_pos, msg.len());
-        let err_loc = try!(self.find_error_locator(&fsynd, None, erase_pos.len()));
-        let mut err_pos = try!(self.find_errors(&err_loc.reverse(), msg.len()));
-
-        // Append erase_pos to err_pos
-        for x in erase_pos.iter() {
-            err_pos.push(*x);
-        }
-
-        let msg_out = self.correct_errata(&msg, &synd, &err_pos);
-
-        // Check output message correctness
-        if self.is_corrupted(&msg_out) {
-            Err(DecoderError::TooManyErrors)
-        } else {
-            Ok(Buffer::from_polynom(msg_out, msg.len() - self.ecc_len))
-        }
-    }
+        self.correct_err_count(msg, erase_pos).map(|(r,_)| r)
+     }
 
     /// Performs fast corruption check.
     ///
@@ -165,7 +201,7 @@ impl Decoder {
 
     /// Forney algorithm, computes the values (error magnitude) to correct the input message.
     #[allow(non_snake_case)]
-    fn correct_errata(&self, msg: &[u8], synd: &[u8], err_pos: &[u8]) -> Polynom {
+    fn correct_errata(&self, msg: &[u8], synd: &[u8], err_pos: &[u8]) -> (Polynom, usize) {
         // convert the positions to coefficients degrees
         let mut coef_pos = Polynom::with_length(err_pos.len());
         for (i, x) in err_pos.iter().enumerate() {
@@ -185,6 +221,7 @@ impl Decoder {
         }
 
         let mut E = Polynom::with_length(msg.len());
+        let mut fixed = 0;
 
         let err_eval_rev = err_eval.reverse();
         for (i, Xi) in X.iter().enumerate() {
@@ -209,9 +246,10 @@ impl Decoder {
 
             let E_index = uncheck!(err_pos[i]) as usize;
             uncheck_mut!(E[E_index]) = magnitude;
+            fixed += 1;
         }
 
-        msg.add(&E)
+        (msg.add(&E), fixed)
     }
 
     #[allow(non_snake_case)]
@@ -367,7 +405,23 @@ mod tests {
                       31, 179, 149, 163];
 
         assert_eq!(result,
-                   *Decoder::new(err_pos.len()).correct_errata(&msg, &synd, &err_pos));
+                   *Decoder::new(err_pos.len()).correct_errata(&msg, &synd, &err_pos).0);
+    }
+
+    #[test]
+    fn error_count() {
+        let msg = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+        let encoder = Encoder::new(10);
+
+        let encoded = encoder.encode(&msg[..]);
+        let mut errd = *encoded;
+
+        errd[0] = 255;
+        errd[3] = 255;
+
+        let (_correct,err) = Decoder::new(10).correct_err_count(&errd, None).unwrap();
+
+        assert_eq!(err, 2);
     }
 
     #[test]
