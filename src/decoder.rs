@@ -14,7 +14,7 @@ pub enum DecoderError {
 type Result<T> = core::result::Result<T, DecoderError>;
 
 /// Reed-Solomon BCH decoder
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub struct Decoder {
     ecc_len: usize,
 }
@@ -60,7 +60,6 @@ impl Decoder {
     /// // Check results
     /// assert_eq!(&[1, 2, 3, 4], corrected.data())
     /// ```
-
     pub fn correct_err_count(&self,
                              msg: &[u8],
                              erase_pos: Option<&[u8]>)
