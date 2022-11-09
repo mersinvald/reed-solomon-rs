@@ -89,8 +89,8 @@ impl Decoder {
         }
 
         let fsynd = self.forney_syndromes(&synd, erase_pos, msg.len());
-        let err_loc = try!(self.find_error_locator(&fsynd, None, erase_pos.len()));
-        let mut err_pos = try!(self.find_errors(&err_loc.reverse(), msg.len()));
+        let err_loc = self.find_error_locator(&fsynd, None, erase_pos.len())?;
+        let mut err_pos = self.find_errors(&err_loc.reverse(), msg.len())?;
 
         // Append erase_pos to err_pos
         for x in erase_pos.iter() {

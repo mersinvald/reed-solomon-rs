@@ -1,5 +1,12 @@
+extern crate serde;
+extern crate serde_json;
 extern crate reed_solomon;
-extern crate rustc_serialize;
+
+use std::thread;
+use std::time::Duration;
+use std::sync::mpsc;
+
+use serde::{Serialize};
 
 use reed_solomon::Encoder;
 use reed_solomon::Decoder;
@@ -23,10 +30,6 @@ impl Iterator for Generator {
         Some(self.num)
     }
 }
-
-use std::thread;
-use std::time::Duration;
-use std::sync::mpsc;
 
 // Returns MB/s
 fn encoder_bandwidth(data_len: usize, ecc_len: usize) -> f32 { 
@@ -92,7 +95,7 @@ fn decoder_bandwidth(data_len: usize, ecc_len: usize, errors: usize) -> f32 {
     kbytes / 1024.0
 } 
 
-#[derive(RustcEncodable)]
+#[derive(Serialize)]
 struct BenchResult {
     data_len: usize,
     ecc_len: usize,
@@ -100,12 +103,12 @@ struct BenchResult {
     decoder: Vec<DecoderResult>
 } 
 
-#[derive(RustcEncodable)]
+#[derive(Serialize)]
 struct EncoderResult {
     bandwidth: f32
 }
 
-#[derive(RustcEncodable)]
+#[derive(Serialize)]
 struct DecoderResult {
     errors: usize,
     bandwidth: f32
@@ -129,6 +132,6 @@ fn main() {
         }
     }).collect();
 
-    let json = rustc_serialize::json::encode(&results).unwrap();
+    let json = serde_json::to_string(&results).unwrap();
     println!("{}", json);
 }

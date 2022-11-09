@@ -10,7 +10,8 @@ authors = ["Mike Lubinets <lubinetsm@yandex.ru>"]
 version = "0.2.1"
 
 [dev-dependencies]
-rustc-serialize = "0.3"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
 
 [features]
 unsafe_indexing = []
